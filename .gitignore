@@ -3,6 +3,9 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+# Exclude prompt_processing
+prompt_processing
+
 # C extensions
 *.so
 
