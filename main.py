@@ -82,7 +82,7 @@ class Quiplash(discord.Client):
         self.vote_timer = None
 
     async def prompt_tick(self, seconds, timer):
-        if not self.answer_phase_going:
+        if (not self.answer_phase_going) or (not timer == self.prompt_timer):
             return
 
         if seconds == 60 or seconds == 30 or seconds == 10 or seconds == 5:
