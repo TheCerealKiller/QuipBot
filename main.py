@@ -5,7 +5,6 @@ import random
 from collections import defaultdict
 from timer import Timer
 from asyncio import sleep
-import traceback
 
 import messages
 
@@ -20,6 +19,11 @@ class Quiplash(discord.Client):
         self.vote_time = 20
         self.points_per_prompt = 1000
         self.win_bonus = 100
+
+        self.game_started = False
+
+        # The User who type !quip start
+        self.host = None
 
         self.answer_phase_going = False
         self.game_channel = None
@@ -49,6 +53,10 @@ class Quiplash(discord.Client):
         self.vote_timer = None
 
     def reset_game(self):
+        self.game_started = False
+
+        self.host = None
+
         self.answer_phase_going = False
         self.game_channel = None
 
@@ -81,10 +89,12 @@ class Quiplash(discord.Client):
             await self.game_channel.send(messages.time_left.format(seconds))
         elif seconds == 0:
             self.answer_phase_going = False
+            await self.game_channel.send(messages.answer_phase_time_up)
             await self.force_answers()
 
-        if self.check_all_prompts():
+        if self.check_all_prompts() and self.answer_phase_going:
             self.answer_phase_going = False
+            await self.game_channel.send(messages.answer_phase_all_answers)
             await self.force_answers()
 
     async def vote_tick(self, seconds, timer):
@@ -134,6 +144,7 @@ class Quiplash(discord.Client):
         author1 = self.current_prompt.players[0]
         author2 = self.current_prompt.players[1]
 
+        # Get the votes (in the form of Reactions)
         reactions1 = discord.utils.get(
             vote_message.reactions, emoji=messages.vote1_reaction)
         reactions2 = discord.utils.get(
@@ -150,11 +161,13 @@ class Quiplash(discord.Client):
             percent1 = int(100.0 * float(count1) / float(count_total))
             percent2 = 100 - percent1
 
+        # Calculate points for each side
         points1 = int(self.points_per_prompt * (percent1 / 100.0))
         points2 = int(self.points_per_prompt * (percent2 / 100.0))
 
-        bonus1 = f'(+{self.win_bonus} Win Bonus)' if (count1 > count2) else ''
-        bonus2 = f'(+{self.win_bonus} Win Bonus)' if (count2 > count1) else ''
+        # Decide win bonus strings
+        bonus1 = f' (+{self.win_bonus} Win Bonus)' if (count1 > count2) else ''
+        bonus2 = f' (+{self.win_bonus} Win Bonus)' if (count2 > count1) else ''
 
         self.points[author1.id] += points1
         self.points[author2.id] += points2
@@ -162,9 +175,14 @@ class Quiplash(discord.Client):
         self.points[author1.id] += self.win_bonus if (count1 > count2) else 0
         self.points[author2.id] += self.win_bonus if (count2 > count1) else 0
 
-        message = messages.voting_over
+        message = ""
 
-        if self.current_prompt_index == len(self.chosen_prompts) - 1:
+        real_prompt_index = self.chosen_prompts.index(self.current_prompt)
+
+        if real_prompt_index < len(self.chosen_prompts) - 1:
+            # Not the last prompt.
+            message = messages.voting_over
+        else:
             # It's the last prompt, change the message that will be displayed.
             message = messages.last_vote_over
 
@@ -266,21 +284,26 @@ class Quiplash(discord.Client):
                 winner.name
             ))
 
+        self.game_started = False
+
     async def force_answers(self):
         sent_players = []
         for prompt in self.chosen_prompts:
             for player in prompt.players:
                 if not player.id in prompt.answers:
-                    await player.send(messages.answer_not_provided)
                     self.record_answer(
                         prompt.prompt, player.id, messages.no_answer)
                     if player not in sent_players:
+                        await player.send(messages.answer_not_provided)
                         sent_players.append(player)
 
         await self.end_answer_phase()
 
-    async def start_entry(self, channel):
+    async def start_entry(self, channel, host):
         self.reset_game()
+
+        self.game_started = True
+        self.host = host
 
         self.game_channel = channel
         entry_message = await self.game_channel.send(messages.start_message)
@@ -349,7 +372,6 @@ class Quiplash(discord.Client):
             await player.send(messages.after_prompt_message)
 
     async def end_answer_phase(self):
-        await self.game_channel.send(messages.answer_phase_time_up)
         await sleep(5.0)
         await self.vote_phase()
 
@@ -378,9 +400,11 @@ class Quiplash(discord.Client):
             args = message.content.split(' ')[1:]
 
             if args[0] == 'start':
-                await self.start_entry(message.channel)
+                if not self.game_started:
+                    await self.start_entry(message.channel, message.author)
             elif args[0] == 'allin':
-                await self.start_game()
+                if message.author == self.host:
+                    await self.start_game()
             elif args[0] == 'debug':
                 await message.channel.send('\n'.join(map(lambda p: str(p.answers), self.chosen_prompts)))
             elif args[0] == 'players':

@@ -8,10 +8,10 @@ When everyone who wants to play has entered, whoever started the game should typ
 prompt_messages = (
     """Your first prompt is:
 `{}`
-You next message will be your answer.""",
+Your next message will be your answer.""",
     """Your second prompt is:
 `{}`
-You next message will be your answer."""
+Your next message will be your answer."""
 )
 time_left = """There are {} seconds left."""
 time_left_single = """There is a second left."""
@@ -37,23 +37,25 @@ The prompt was:
 *The second answer was:*
 ```{}```
 
-React {} to vote for the first answer and {} to vote for the second answer.
-Authors' votes will not be counted, and people who voted for both answers will not be counted.
+**React {} to vote for the first answer and {} to vote for the second answer.**
+*Authors' votes will not be counted, and people who voted for both answers will not be counted.*
+
 You have 20 seconds to vote."""
 voting_over = seperator + """
 Time's up for voting!
 
-The first answer was written by **{author1}** and *{percent1}% ({num1}/{tot})* voted for it! **+{points1} points {bonus1}**.
+The first answer was written by **{author1}** and *{percent1}% ({num1}/{tot})* voted for it! **+{points1} points{bonus1}**.
 
-The second answer was written by **{author2}** and *{percent2}% ({num2}/{tot})* voted for it! **+{points2} points {bonus1}**.
+The second answer was written by **{author2}** and *{percent2}% ({num2}/{tot})* voted for it! **+{points2} points{bonus2}**.
 
 Next prompt coming up!"""
 last_vote_over = seperator + """
 Time's up for voting!
 
-The first answer was written by **{author1}** and *{percent1}% ({num1}/{tot})* voted for it! **+{points1} points {bonus1}**.
+The first answer was written by **{author1}** and *{percent1}% ({num1}/{tot})* voted for it! **+{points1} points{bonus1}**.
 
-The second answer was written by **{author2}** and *{percent2}% ({num2}/{tot})* voted for it! **+{points2} points {bonus1}**.
+The second answer was written by **{author2}** and *{percent2}% ({num2}/{tot})* voted for it! **+{points2} points{bonus2}**.
+
 This was the last prompt. The results of the game will be displayed in a few seconds."""
 end_message = seperator + """
 **The game is over!** 
@@ -62,7 +64,7 @@ end_message = seperator + """
 {}
 
 *Congratulations to the winner:* 
-***{}***!!!!
+***{}!!!!***
 
 Everyone give them a round of applause, and a punch in the face (if needed)."""
 tie_message = seperator + """
@@ -72,7 +74,7 @@ tie_message = seperator + """
 {results}
 
 Uh-oh! It seems that the top {tie_number} players tied!
-Well then, I guess you can all be winners then.
+Well then, I guess you can all be winners.
 
 *Congratulations to the winners:*
 ***{winners}!!!!***
