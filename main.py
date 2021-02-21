@@ -402,13 +402,8 @@ class Quiplash(discord.Client):
             if args[0] == 'start':
                 if not self.game_started:
                     await self.start_entry(message.channel, message.author)
-            elif args[0] == 'allin':
-                if message.author == self.host:
-                    await self.start_game()
-            elif args[0] == 'debug':
-                await message.channel.send('\n'.join(map(lambda p: str(p.answers), self.chosen_prompts)))
-            elif args[0] == 'players':
-                await message.channel.send('\n'.join(map(lambda p: p.name, self.players)))
+            elif args[0] == 'allin' and message.author == self.host:
+                await self.start_game()
 
         else:
             await self.dm_message(message)
